@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}
+Лента
+{% endblock title %}
+{% block content %}
+  <h1>Лента подписок</h1>
+  {% for post in page_obj %}
+    {% include 'includes/post.html' with show_group=True show_author=True %}    
+  {% endfor %}
+  {% include 'posts/includes/paginator.html' %}
+{% endblock %}
