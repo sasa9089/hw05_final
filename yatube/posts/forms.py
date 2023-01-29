@@ -7,11 +7,6 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ('text', 'group', 'image')
-        help_texts = {
-            'text': 'Текст нового поста',
-            'group': 'Группа, к которой будет относиться пост',
-            'image': 'Выберите картинку',
-        }
 
 
 class CommentForm(forms.ModelForm):

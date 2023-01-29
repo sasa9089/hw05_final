@@ -7,7 +7,7 @@ from .forms import PostForm, CommentForm
 from .models import Group, Post, User, Comment, Follow
 
 POSTS_NUMBER = 10
-CACHING_TIME = 20
+# CACHING_TIME = 20
 
 
 def page_context(queryset, request):
@@ -15,9 +15,10 @@ def page_context(queryset, request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return page_obj
+    print('page_obj')
 
 
-@cache_page(CACHING_TIME, key_prefix='index_page')
+# @cache_page(CACHING_TIME, key_prefix='index_page')
 def index(request):
     context = {'page_obj': page_context(
         Post.objects.all(), request)}

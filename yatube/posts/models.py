@@ -65,25 +65,31 @@ class Post(CreatedModel):
         return self.text[:NUM_OF_CHAR]
 
 
-class Comment(models.Model):
+class Comment(CreatedModel):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='comments',
+        verbose_name='Пост',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='comments',
+        verbose_name='Автор',
     )
     text = models.TextField(
         'Текст комментария',
-        help_text='Введите текст комментария'
+        help_text='Введите текст комментария',
     )
-    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ('-created',)
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self) -> str:
+        return self.text[:NUM_OF_CHAR]
 
 
 class Follow(models.Model):
@@ -91,9 +97,18 @@ class Follow(models.Model):
         User,
         related_name='follower',
         on_delete=models.CASCADE,
+        verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         related_name='following',
         on_delete=models.CASCADE,
+        verbose_name='Автор',
     )
+
+    class Meta:
+        verbose_name = 'Подписчик'
+        verbose_name_plural = 'Подписчики'
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'
