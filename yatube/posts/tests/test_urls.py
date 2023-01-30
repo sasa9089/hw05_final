@@ -115,3 +115,11 @@ class UrlsViewTestCase(TestCase):
         )
         self.assertRedirects(
             response, f'/posts/{self.post.id}/')
+
+    def test_unauthorized_user_does_not_access_follow_page(self):
+        """
+        Неавторизованный пользователь не имеет доступа к странице follow.
+        """
+        response = self.guest_client.get('/follow/', follow=True)
+        self.assertRedirects(
+            response, '/auth/login/?next=/follow/')

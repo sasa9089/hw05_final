@@ -6,15 +6,17 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from ..forms import CommentForm
 from ..models import Follow, Group, Post
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class ViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -111,8 +113,10 @@ class ViewsTest(TestCase):
         response = self.authorized_client.get(
             reverse('posts:post_detail',
                     kwargs={'post_id': self.post.id}))
-        test_post_detail = response.context['post']
-        self.assertEqual(test_post_detail, self.post)
+        context_post = response.context['post']
+        self.assertEqual(context_post, self.post)
+        self.assertIn('comments', response.context)
+        self.assertIsInstance(response.context['form'], CommentForm)
 
     def test_post_create_page_show_correct_context(self):
         """
@@ -200,6 +204,8 @@ class PaginatorViewsTest(TestCase):
         cls.author = User.objects.create_user(username='author')
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.author)
+        cls.user = User.objects.create_user(username='user')
+        cls.authorized_client.force_login(cls.user)
         cache.clear()
 
         cls.group = Group.objects.create(
@@ -213,6 +219,10 @@ class PaginatorViewsTest(TestCase):
                 author=cls.author,
                 group=cls.group
             )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.author
+        )
 
     def test_first_page_contains_ten_records(self):
         """Проверка: количество постов на первой странице равно 10."""
@@ -221,7 +231,8 @@ class PaginatorViewsTest(TestCase):
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}),
             reverse('posts:profile',
-                    kwargs={'username': self.author})
+                    kwargs={'username': self.author}),
+            reverse('posts:follow_index'),
         }
         for url in urls_paginations:
             with self.subTest(url=url):
@@ -236,7 +247,8 @@ class PaginatorViewsTest(TestCase):
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}) + '?page=2',
             reverse('posts:profile',
-                    kwargs={'username': self.author}) + '?page=2'
+                    kwargs={'username': self.author}) + '?page=2',
+            reverse('posts:follow_index') + '?page=2',
         }
         for url in urls_paginations:
             with self.subTest(url=url):
@@ -306,7 +318,8 @@ class FollowTest(TestCase):
         ))
         self.assertEqual(Follow.objects.count(), follow_count + 1)
         self.assertTrue(Follow.objects.filter(
-            author__username=self.user_author
+            author__username=self.user_author,
+            user__username=self.user,
         ).exists())
 
     def test_authorized_user_unsubscribe_from_users_he_subscribed(self):

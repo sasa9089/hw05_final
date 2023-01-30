@@ -2,14 +2,14 @@ import shutil
 import tempfile
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.test import Client, TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Group, Post, Comment
+from ..models import Comment, Group, Post
 
 User = get_user_model()
 
@@ -128,7 +128,7 @@ class PostFormTests(TestCase):
                              f'/auth/login/?next=/posts/{self.post.id}/edit/')
         self.assertTrue(Post.objects.filter(
             text=self.post.text,
-            group=self.group.id,
+            group=self.post.group,
             author=self.post.author,
             pub_date=self.post.pub_date,
             id=self.post.id
@@ -222,7 +222,7 @@ class PostFormTests(TestCase):
         self.assertTrue(Comment.objects.filter(
             post=self.post,
             author=self.author,
-            text=self.comment.text,
+            text=form_data['text'],
         ).exists())
 
     def test_unauthorized_user_cannot_write_comment(self):
